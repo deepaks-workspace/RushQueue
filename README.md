@@ -2,249 +2,203 @@
 
 ## Team
 
-Deepak Singh Parihar 1AT24IS049, 
-Akshay Kumar Ramesh Pujer 1AT24IS011
+**Deepak Singh Parihar** — 1AT24IS049  
+**Akshay Kumar Ramesh Pujer** — 1AT24IS011
+
+---
 
 ## How to run
 
+> Python 3 is required.
+
 ```
-gcc main.c -o rushqueue
-./rushqueue
+python main.py
 ```
 
-On Windows PowerShell, run `.\rushqueue.exe` instead of `./rushqueue`.
+The program opens a numbered menu. Navigate by typing the option number and pressing Enter.
+
+---
 
 ## Features that work
 
-Core Features
+### Core Features
 
-1. Flash sale setup with item name, total stock and per-customer order limit
-2. Order placement with unique order IDs and arrival sequence numbers
-3. First-come-first-served confirmation until stock ends
-4. Waitlist for orders placed after sell-out
-5. Order cancellation that releases stock and automatically confirms the next waitlisted order that fits
-6. Final report showing confirmed, waitlisted, cancelled and rejected orders with reasons
+1. **Flash sale setup** — configure item name, total stock (1–10 000), and per-customer limit (1–100). If the limit is typed larger than the stock, the program silently caps it.
+2. **Order placement with unique IDs and arrival sequence** — every order receives an auto-incrementing ID starting at 1001 and a sequential arrival number.
+3. **First-come-first-served confirmation** — orders are confirmed in arrival order as long as stock is available.
+4. **Waitlist after sell-out** — once available stock hits zero, new orders are queued in arrival order on a FIFO waitlist.
+5. **Cancellation with automatic stock release** — cancelling a confirmed order returns its units to the pool and immediately promotes waiting orders (oldest first) that fit the newly freed quantity.
+6. **Final report** — option 5 prints four labelled sections (CONFIRMED, WAITLISTED, CANCELLED, REJECTED) with order ID, arrival number, customer name, quantity, and reason for each entry.
 
-Stretch Features
+### Stretch Features
 
--   Duplicate-order prevention: same customer within 10 seconds is rejected
--   Simulation of 500 random orders with a report of how long the stock lasted
+7. **Duplicate-order prevention** — a second order from the same customer (case-insensitive) is REJECTED if it arrives within 10 seconds of their existing active order.
+8. **500-order simulation** — option 6 fires 500 randomised orders against 150 synthetic customers and prints a summary showing how many were confirmed, waitlisted, duplicate-rejected, limit-rejected, units sold, and at which order number stock ran out.
 
-Other
+### Additional Quality Features
 
--   Input validation for numbers, empty names and over-long input
--   Customer names are compared ignoring upper and lower case
+- **Input validation** — empty strings, out-of-range integers, and non-numeric text are all re-prompted, never crash.
+- **Case-insensitive customer names** — `ravi`, `Ravi`, and `RAVI` are treated as the same customer throughout.
+
+---
+
+## Test results
+
+| # | Scenario | Result |
+|---|----------|--------|
+| a | Options 2, 3, 5, 6 before setup all print "No sale set up yet" | ✅ Pass |
+| b | Setup rejects empty name, stock 0, stock "abc", limit 0; then accepts valid inputs | ✅ Pass |
+| c | ravi ×2 and asha ×1 → CONFIRMED; kiran ×1, meena ×2, joe ×1 → WAITLISTED | ✅ Pass |
+| d | Cancel 1001 (ravi ×2): 2 units released; kiran and joe promoted to CONFIRMED; meena (needs 2, only 0 left after kiran+joe) stays WAITLISTED | ✅ Pass |
+| e | Cancelling 1001 again → "already cancelled"; 9999 → "not found"; cancelling waitlisted meena → "Removed from the waitlist" | ✅ Pass |
+| f | Same customer within 10 seconds → REJECTED "Duplicate order within 10 seconds" | ✅ Pass |
+| g | Same customer (RAVI vs Ravi) after 11 seconds but over limit → REJECTED "Exceeds per-customer limit of 3 (already holding 3)" | ✅ Pass |
+| h | Final report shows all four sections with correct reasons | ✅ Pass |
+| i | Simulation: confirmed + waitlisted + dup-rejected + limit-rejected = 500; units sold = 100 | ✅ Pass |
+
+---
 
 ## Sample run
 
-Run 1st ;-
+### 1 — Flash sale setup (with invalid inputs caught)
 
-    ==============================
-    RUSHQUEUE - FLASH SALE
-    ==============================
-    1. Setup flash sale
-    2. Place order
-    3. Cancel order
-    4. Show sale info
-    5. Final report
-    0. Exit
-    ------------------------------
-    Enter choice: 1
+```
+--- Flash Sale Setup ---
+Item name:
+  Input cannot be empty.
+Item name: Phone
+Total stock (1-10000):   0
+  Value must be between 1 and 10000.
+Total stock (1-10000): abc
+  Invalid input. Please enter a number.
+Total stock (1-10000): 3
+Per-customer limit (1-100): 0
+  Value must be between 1 and 100.
+Per-customer limit (1-100): 3
 
-    --- Flash Sale Setup ---
-    Item name: phone
-    Total stock (1-10000): 5
-    Per-customer limit (1-100): 3
+Sale created: Phone | Stock: 3 | Limit per customer: 3
+```
 
-    Sale created: phone | Stock: 5 | Limit per customer: 3
+### 2 — Confirmed orders
 
-    Enter choice: 2
+```
+--- Place Order ---
+Customer name: ravi
+Quantity (1-100): 2
 
-    --- Place Order ---
-    Customer name: ravi
-    Quantity (1-100): 1
+Order ID: 1001 | Arrival #1 | ravi x2
+Status: CONFIRMED | Stock left: 1
 
-    Order ID: 1001 | Arrival #1 | ravi x1
-    Status: CONFIRMED | Stock left: 4
+--- Place Order ---
+Customer name: asha
+Quantity (1-100): 1
 
-    Enter choice: 2
+Order ID: 1002 | Arrival #2 | asha x1
+Status: CONFIRMED | Stock left: 0
+```
 
-    --- Place Order ---
-    Customer name: ravi
-    Quantity (1-100): 1
+### 3 — Waitlisted orders
 
-    Order ID: 1002 | Arrival #2 | ravi x1
-    Status: CONFIRMED | Stock left: 3
+```
+--- Place Order ---
+Customer name: kiran
+Quantity (1-100): 1
 
-    Enter choice: 2
+Order ID: 1003 | Arrival #3 | kiran x1
+Status: WAITLISTED | Waitlist position: 1
 
-    --- Place Order ---
-    Customer name: ravi
-    Quantity (1-100): 1
+--- Place Order ---
+Customer name: meena
+Quantity (1-100): 2
 
-    Order ID: 1003 | Arrival #3 | ravi x1
-    Status: CONFIRMED | Stock left: 2
+Order ID: 1004 | Arrival #4 | meena x2
+Status: WAITLISTED | Waitlist position: 2
 
-    Enter choice: 2
+--- Place Order ---
+Customer name: joe
+Quantity (1-100): 1
 
-    --- Place Order ---
-    Customer name: asha
-    Quantity (1-100): 1
+Order ID: 1005 | Arrival #5 | joe x1
+Status: WAITLISTED | Waitlist position: 3
+```
 
-    Order ID: 1004 | Arrival #4 | asha x1
-    Status: CONFIRMED | Stock left: 1
+### 4 — Rejected order (duplicate within 10 s)
 
-    Enter choice: 2
+```
+--- Place Order ---
+Customer name: ravi
+Quantity (1-100): 1
 
-    --- Place Order ---
-    Customer name: asha
-    Quantity (1-100): 1
+Order ID: 1006 | Arrival #6 | ravi x1
+Status: REJECTED | Reason: Duplicate order within 10 seconds
+```
 
-    Order ID: 1005 | Arrival #5 | asha x1
-    Status: REJECTED | Reason: Duplicate order within 10 seconds
+### 5 — Cancellation with waitlist promotion
 
-    Enter choice: 0
+```
+--- Cancel Order ---
+Order ID to cancel: 1001
+Order 1001 (ravi x2) cancelled.
+Released 2 unit(s). Stock now: 2
+  -> Waitlisted order 1003 (kiran x1) is now CONFIRMED.
+  -> Waitlisted order 1005 (joe x1) is now CONFIRMED.
+```
 
-    Goodbye!
+*(meena needs 2 units but only 0 remained after kiran and joe were promoted, so she stays WAITLISTED)*
 
-Run 2 (canceling order):-
+### 6 — Final report
 
-    --- Place Order ---
-    Customer name: ravi
-    Quantity (1-100): 2
+```
+==================================================
+             RUSHQUEUE - FINAL REPORT
+==================================================
+Item             : Phone
+Total stock      : 3
+Units sold       : 3
+Stock remaining  : 0
+Per-customer cap : 3
+Orders received  : 6
 
-    Order ID: 1001 | Arrival #1 | ravi x2
-    Status: CONFIRMED | Stock left: 1
+--- CONFIRMED ORDERS ---
+OrderID  Arrival  Customer        Qty   Reason
+1002     2        asha            1     Stock available
+1003     3        kiran           1     Promoted from waitlist after cancellation
+1005     5        joe             1     Promoted from waitlist after cancellation
+Total: 3 order(s)
 
-    --- Cancel Order ---
-    Order ID to cancel: 1001
-    Order 1001 (ravi x2) cancelled.
-    Released 2 unit(s). Stock now: 2
-    -> Waitlisted order 1002 (asha x2) is now CONFIRMED.
+--- WAITLISTED ORDERS ---
+OrderID  Arrival  Customer        Qty   Reason
+1004     4        meena           2     Insufficient stock, added to waitlist
+Total: 1 order(s)
 
-    --- Cancel Order ---
-    Order ID to cancel: 1001
-    Order 1001 (ravi  x1) cancelled.
-    Removed from the waitlist.
+--- CANCELLED ORDERS ---
+OrderID  Arrival  Customer        Qty   Reason
+1001     1        ravi            2     Cancelled by customer
+Total: 1 order(s)
 
-Run 3 :-
-Enter choice: 5
+--- REJECTED ORDERS ---
+OrderID  Arrival  Customer        Qty   Reason
+1006     6        ravi            1     Duplicate order within 10 seconds
+Total: 1 order(s)
 
-    ==================================================
-                RUSHQUEUE - FINAL REPORT
-    ==================================================
-    Item             : phone
-    Total stock      : 3
-    Units sold       : 2
-    Stock remaining  : 1
-    Per-customer cap : 3
-    Orders received  : 5
+==================================================
+```
 
-    --- CONFIRMED ORDERS ---
-    OrderID  Arrival  Customer        Qty   Reason
-    1002     2        asha            1     Stock available
-    1003     3        kiran           1     Promoted from waitlist after cancellation
-    Total: 2 order(s)
+### 7 — Simulation (stock 100, limit 5, 500 orders)
 
-    --- WAITLISTED ORDERS ---
-    OrderID  Arrival  Customer        Qty   Reason
-    1004     4        meena           2     Insufficient stock, added to waitlist
-    Total: 1 order(s)
-
-    --- CANCELLED ORDERS ---
-    OrderID  Arrival  Customer        Qty   Reason
-    1001     1        ravi            2     Cancelled by customer
-    Total: 1 order(s)
-
-    --- REJECTED ORDERS ---
-    OrderID  Arrival  Customer        Qty   Reason
-    1005     5        kiran           3     Exceeds per-customer limit of 3 (already holding 1)
-    Total: 1 order(s)
-
-    ==================================================
-
-Run 4 :-
-
-    Enter choice: 1
-
-    --- Flash Sale Setup ---
-    Item name: phone
-    Total stock (1-10000): 100
-    Per-customer limit (1-100): 5
-
-    Sale created: phone | Stock: 100 | Limit per customer: 5
-
-    ==============================
-    RUSHQUEUE - FLASH SALE
-    ==============================
-    1. Setup flash sale
-    2. Place order
-    3. Cancel order
-    4. Show sale info
-    5. Final report
-    6. Simulate 500 random orders
-    0. Exit
-    ------------------------------
-    Enter choice: 6
-
-    ========== SIMULATION RESULT ==========
-    Item                : phone
-    Starting stock      : 100
-    Per-customer limit  : 5
-    Orders simulated    : 500
-    Confirmed           : 32
-    Waitlisted          : 201
-    Rejected (duplicate): 16
-    Rejected (limit)    : 251
-    Units sold          : 100
-    Stock remaining     : 0
-    Stock lasted        : sold out at order #34 (36 simulated seconds)
-    =======================================
-    Choose option 5 to see the full order report.
-
-Run 5:-
-
-    Enter choice: 1
-
-    --- Flash Sale Setup ---
-    Item name: phone
-    Total stock (1-10000): 5
-    Per-customer limit (1-100): 3
-
-    Sale created: phone | Stock: 5 | Limit per customer: 3
-
-    Enter choice: 2
-
-    --- Place Order ---
-    Customer name: ravi
-    Quantity (1-100): 2
-
-    Order ID: 1001 | Arrival #1 | ravi x2
-    Status: CONFIRMED | Stock left: 3
-
-    Enter choice: 2
-
-    --- Place Order ---
-    Customer name: RAVI
-    Quantity (1-100): 2
-
-    Order ID: 1002 | Arrival #2 | RAVI x2
-    Status: REJECTED | Reason: Exceeds per-customer limit of 3 (already holding 2)
-
-    Enter choice: 2
-
-    --- Place Order ---
-    Customer name: raVi
-    Quantity (1-100): 2
-
-    Order ID: 1003 | Arrival #3 | raVi x2
-    Status: REJECTED | Reason: Exceeds per-customer limit of 3 (already holding 2)
-
-    Enter choice: 2
-
-    --- Place Order ---
-    Customer name: gdayiadwefkhwfbvwakncgngniangncncynggyrcgyncayugugy
-    Quantity (1-100): 1
-
-    Order ID: 1004 | Arrival #4 | gdayiadwefkhwfbvwakncgngniangncncynggyrcgyncayugu x1
-    Status: CONFIRMED | Stock left: 2
+```
+========== SIMULATION RESULT ==========
+Item                : Gadget
+Starting stock      : 100
+Per-customer limit  : 5
+Orders simulated    : 500
+Confirmed           : 36
+Waitlisted          : 194
+Rejected (duplicate): 19
+Rejected (limit)    : 251
+Units sold          : 100
+Stock remaining     : 0
+Stock lasted        : sold out at order #43 (46 simulated seconds)
+=======================================
+Choose option 5 to see the full order report.
+```
